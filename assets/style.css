@@ -1,0 +1,149 @@
+/* ==========================
+   Global Background
+========================== */
+
+.stApp {
+    background-color: #F4F9FC;
+}
+
+
+/* ==========================
+   Main Titles
+========================== */
+
+h1 {
+
+    color: #003B5C;
+
+    font-weight: 700;
+
+}
+
+
+h2, h3 {
+
+    color: #005B96;
+
+}
+
+
+
+/* ==========================
+   Metric Cards
+========================== */
+
+div[data-testid="stMetric"] {
+
+    background:
+
+    linear-gradient(
+        135deg,
+        #ffffff,
+        #eef7fb
+    );
+
+
+    padding: 20px;
+
+    border-radius: 15px;
+
+    border-left: 5px solid #0077B6;
+
+    box-shadow:
+
+    0px 4px 10px rgba(0,0,0,0.08);
+
+}
+
+
+
+/* Metric value */
+
+div[data-testid="stMetricValue"] {
+
+    color:#0077B6;
+
+    font-size:32px;
+
+    font-weight:700;
+
+}
+
+
+
+/* ==========================
+   Buttons
+========================== */
+
+.stButton button {
+
+    background-color:#0077B6;
+
+    color:white;
+
+    border-radius:10px;
+
+    height:45px;
+
+    font-weight:bold;
+
+}
+
+
+.stButton button:hover {
+
+    background-color:#005B96;
+
+}
+
+
+
+/* ==========================
+   Data Tables
+========================== */
+
+
+div[data-testid="stDataFrame"] {
+
+    border-radius:12px;
+
+}
+
+
+
+/* ==========================
+   Sidebar
+========================== */
+
+
+section[data-testid="stSidebar"] {
+
+    background:
+
+    linear-gradient(
+        180deg,
+        #003B5C,
+        #0077B6
+    );
+
+}
+
+
+section[data-testid="stSidebar"] * {
+
+    color:white;
+
+}
+
+
+
+/* ==========================
+   Alerts
+========================== */
+
+
+.stAlert {
+
+    border-radius:12px;
+
+}
