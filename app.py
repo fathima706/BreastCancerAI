@@ -1,9 +1,9 @@
 import streamlit as st
+import sqlite3
 
-
-# ==========================
+# =====================================================
 # Page Configuration
-# ==========================
+# =====================================================
 
 st.set_page_config(
     page_title="Breast Cancer AI",
@@ -11,205 +11,265 @@ st.set_page_config(
     layout="wide"
 )
 
-
-# ==========================
+# =====================================================
 # Load CSS
-# ==========================
+# =====================================================
 
 def load_css():
-
     try:
         with open("assets/style.css") as f:
             st.markdown(
                 f"<style>{f.read()}</style>",
                 unsafe_allow_html=True
             )
-
-    except FileNotFoundError:
+    except:
         pass
-
 
 load_css()
 
+# =====================================================
+# Database Statistics
+# =====================================================
 
-# ==========================
-# Sidebar
-# ==========================
+try:
+    conn = sqlite3.connect("database/patients.db")
 
-with st.sidebar:
+    cursor = conn.cursor()
 
-    st.markdown(
-    """
-    # 🏥 Breast Cancer AI
+    cursor.execute("SELECT COUNT(*) FROM predictions")
+    total_patients = cursor.fetchone()[0]
 
-    ---
-    """
-    )
+    cursor.execute("""
+    SELECT COUNT(*)
+    FROM predictions
+    WHERE prediction LIKE '%1%'
+    """)
+    high_risk = cursor.fetchone()[0]
 
+    conn.close()
 
-    st.success(
-        "Clinical Decision Support System"
-    )
+except:
+    total_patients = 0
+    high_risk = 0
 
+low_risk = total_patients - high_risk
 
-    st.markdown(
-    """
-    ### 🤖 Model
+# =====================================================
+# Header
+# =====================================================
 
-    🌲 Random Forest
+st.title("🏥 Breast Cancer Clinical Decision Support System")
 
-
-    ### Features
-
-    🩺 Prediction
-
-    📜 History
-
-    📊 Evaluation
-
-    🌲 Explainability
-
-
-    ---
-    """
-    )
-
-
-    st.caption(
-        "Version 1.0 | Research Prototype"
-    )
-
-# ==========================
-# Home Page
-# ==========================
-
-st.title(
-    "🏥 Breast Cancer Clinical Decision Support System"
-)
-
-st.image(
-    "assets/logo.png",
-    width=120
-)
 st.markdown(
 """
-## AI-Powered Breast Cancer Recurrence Prediction
-
-This application uses Machine Learning to assist in predicting
-the likelihood of breast cancer recurrence from clinical patient data.
-
-The system provides:
-
-- 🩺 Patient recurrence prediction
-- 📜 Prediction history tracking
-- 📊 Model performance evaluation
-- 🌲 Feature importance analysis
-
-⚠️ **For educational and research purposes only.**
+### AI-Powered Breast Cancer Recurrence Prediction Platform
 """
 )
 
+st.success(
+    "Machine Learning • Explainable AI • Clinical Analytics"
+)
 
 st.divider()
 
-
-# ==========================
+# =====================================================
 # KPI Cards
-# ==========================
+# =====================================================
 
-col1, col2, col3 = st.columns(3)
+c1, c2, c3, c4 = st.columns(4)
 
-
-with col1:
-
+with c1:
     st.metric(
-        "Model",
-        "Random Forest"
+        "Patients",
+        total_patients
     )
 
-
-with col2:
-
+with c2:
     st.metric(
-        "Accuracy",
-        "61.96%"
+        "High Risk",
+        high_risk
     )
 
-
-with col3:
-
+with c3:
     st.metric(
-        "Status",
+        "Low Risk",
+        low_risk
+    )
+
+with c4:
+    st.metric(
+        "AI Status",
         "Ready"
     )
 
-
 st.divider()
 
+# =====================================================
+# System Overview
+# =====================================================
 
-# ==========================
-# Project Overview
-# ==========================
-
-st.subheader(
-    "🚀 System Overview"
-)
-
-
-left, right = st.columns(2)
-
+left, right = st.columns([2, 1])
 
 with left:
 
-    st.write(
-        """
-        ### Clinical Prediction
+    st.subheader("🚀 About the System")
 
-        The model analyzes patient clinical features
-        and predicts recurrence risk.
-        """
-    )
+    st.write("""
+This platform predicts the likelihood of breast cancer recurrence
+using a trained Random Forest machine learning model.
 
+The system includes:
 
-    st.write(
-        """
-        ### Patient Management
-
-        All predictions are stored and can be reviewed
-        through the history page.
-        """
-    )
-
+- 🩺 Patient Recurrence Prediction
+- 📊 Clinical Analytics Dashboard
+- 🌲 Explainable AI
+- 📜 Prediction History
+- 📄 PDF Report Generation
+- 💾 SQLite Database
+""")
 
 with right:
 
-    st.write(
-        """
-        ### Model Evaluation
+    st.info("""
+### AI Model
 
-        Performance is measured using:
+🌲 Random Forest
 
-        - Accuracy
-        - Precision
-        - Recall
-        - F1 Score
-        """
-    )
+**Status:** Active
 
+**Version:** 2.0
 
-    st.write(
-        """
-        ### Explainable AI
-
-        Feature importance helps understand which
-        clinical factors influence predictions.
-        """
-    )
-
+**Purpose:** Clinical Decision Support
+""")
 
 st.divider()
 
+# =====================================================
+# Available Modules
+# =====================================================
+
+st.subheader("📂 Available Modules")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.success("""
+### 🩺 Prediction
+
+Predict recurrence risk from patient clinical information.
+""")
+
+with col2:
+    st.info("""
+### 📜 History
+
+Review all previous patient predictions.
+""")
+
+with col3:
+    st.warning("""
+### 📈 Dashboard
+
+Visualize clinical statistics and trends.
+""")
+
+col4, col5, col6 = st.columns(3)
+
+with col4:
+    st.info("""
+### 🌲 Explainability
+
+Understand the model's feature importance.
+""")
+
+with col5:
+    st.success("""
+### 📊 Model Performance
+
+Accuracy, Precision, Recall, ROC-AUC.
+""")
+
+with col6:
+    st.info("""
+### 📄 Reports
+
+Generate downloadable PDF reports.
+""")
+
+st.divider()
+
+# =====================================================
+# Technology Stack
+# =====================================================
+
+st.subheader("💻 Technology Stack")
+
+tech1, tech2 = st.columns(2)
+
+with tech1:
+
+    st.markdown("""
+### Machine Learning
+
+- Random Forest
+- Scikit-Learn
+- SHAP
+- Pandas
+- NumPy
+""")
+
+with tech2:
+
+    st.markdown("""
+### Application
+
+- Streamlit
+- SQLite
+- Joblib
+- FPDF
+- Plotly
+""")
+
+st.divider()
+
+# =====================================================
+# Workflow
+# =====================================================
+
+st.subheader("⚙️ Prediction Workflow")
+
+st.code("""
+Patient Information
+        │
+        ▼
+Data Preprocessing
+        │
+        ▼
+Random Forest Model
+        │
+        ▼
+Prediction & Confidence
+        │
+        ▼
+Save to Database
+        │
+        ▼
+Generate PDF Report
+""")
+
+st.divider()
+
+# =====================================================
+# Footer
+# =====================================================
+
+st.warning(
+"""
+This software is intended for educational and research purposes only.
+It should not replace professional medical advice or diagnosis.
+"""
+)
 
 st.caption(
-    "⚠️ This AI system is not a replacement for professional medical diagnosis."
+    "Breast Cancer AI • Version 2.0 • Built with Streamlit & Scikit-Learn"
 )

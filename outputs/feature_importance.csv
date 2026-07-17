@@ -1,0 +1,20 @@
+Feature,Importance
+num__Age at Diagnosis,0.3041312502731136
+num__Tumor Size,0.2588509743585422
+num__Lymph nodes examined positive,0.17218466668236646
+num__Neoplasm Histologic Grade,0.05367791715361691
+num__Tumor Stage,0.04874507380994689
+cat__Hormone Therapy_YES,0.018436736328119017
+cat__Hormone Therapy_NO,0.018423683489936258
+cat__HER2 Status_Negative,0.01781273126196344
+cat__PR Status_Negative,0.017273567688347983
+cat__HER2 Status_Positive,0.017073340565592125
+cat__Chemotherapy_YES,0.016622658072471496
+cat__Chemotherapy_NO,0.016089952884896095
+cat__PR Status_Positive,0.015637142186378617
+cat__ER Status_Positive,0.012782057893748956
+cat__ER Status_Negative,0.011901769482169793
+cat__Chemotherapy_Unknown,0.00012640361156482103
+cat__HER2 Status_Unknown,9.423852089588182e-05
+cat__Hormone Therapy_Unknown,7.460623530929936e-05
+cat__PR Status_Unknown,6.122950102012146e-05

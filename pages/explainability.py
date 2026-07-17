@@ -1,72 +1,35 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import shap
+import matplotlib.pyplot as plt
 
-
-from src.preprocess import (
-    load_data,
-    preprocess_data
-)
-
-
-# ==========================
+# =====================================================
 # Page Configuration
-# ==========================
+# =====================================================
 
 st.set_page_config(
-    page_title="Explainability",
-    page_icon="🌲",
+    page_title="Explainable AI",
+    page_icon="🧠",
     layout="wide"
 )
 
-
-# ==========================
-# Title
-# ==========================
-
-st.title(
-    "🌲 Explainable AI - Feature Analysis"
-)
-
+st.title("🧠 Explainable AI")
 
 st.markdown(
 """
-This page explains which clinical features have the
-largest influence on the Random Forest prediction.
+This page explains how the Random Forest model makes predictions.
 
-Feature importance improves transparency and helps
-understand model behaviour.
+SHAP (SHapley Additive exPlanations) is used to identify
+which clinical features influence each prediction.
 """
 )
 
-
 st.divider()
 
-
-# ==========================
-# Load Dataset
-# ==========================
-
-try:
-
-    df = load_data()
-
-    X, y = preprocess_data(df)
-
-
-except Exception as e:
-
-    st.error(
-        f"Dataset loading failed: {e}"
-    )
-
-    st.stop()
-
-
-
-# ==========================
+# =====================================================
 # Load Model
-# ==========================
+# =====================================================
 
 try:
 
@@ -74,95 +37,188 @@ try:
         "saved_models/random_forest_pipeline.pkl"
     )
 
-
 except Exception as e:
 
-    st.error(
-        f"Model loading failed: {e}"
-    )
+    st.error(e)
 
     st.stop()
 
-
-
-# ==========================
-# Feature Importance
-# ==========================
-
-st.subheader(
-    "🌲 Random Forest Feature Importance"
-)
-
+# =====================================================
+# Load Dataset
+# =====================================================
 
 try:
 
-    classifier = model.named_steps[
-        "classifier"
-    ]
-
-
-    importance = classifier.feature_importances_
-
-
-    importance_df = pd.DataFrame({
-
-        "Feature": X.columns,
-
-        "Importance": importance
-
-    })
-
-
-    importance_df = importance_df.sort_values(
-        by="Importance",
-        ascending=False
+    df = pd.read_csv(
+        "dataset/breast_cancer_data.csv"
     )
-
-
-    st.dataframe(
-        importance_df,
-        width="stretch"
-    )
-
-
-    st.bar_chart(
-        importance_df.set_index(
-            "Feature"
-        )
-    )
-
 
 except Exception as e:
 
-    st.error(
-        f"Feature extraction failed: {e}"
+    st.error(e)
+
+    st.stop()
+
+# =====================================================
+# Feature Selection
+# =====================================================
+
+features = [
+
+    "Age at Diagnosis",
+
+    "Tumor Size",
+
+    "Tumor Stage",
+
+    "Lymph nodes examined positive",
+
+    "Neoplasm Histologic Grade",
+
+    "ER Status",
+
+    "PR Status",
+
+    "HER2 Status",
+
+    "Chemotherapy",
+
+    "Hormone Therapy"
+
+]
+
+X = df[features].copy()
+
+# Fill missing values
+
+numeric = [
+
+    "Age at Diagnosis",
+
+    "Tumor Size",
+
+    "Tumor Stage",
+
+    "Lymph nodes examined positive",
+
+    "Neoplasm Histologic Grade"
+
+]
+
+categorical = [
+
+    "ER Status",
+
+    "PR Status",
+
+    "HER2 Status",
+
+    "Chemotherapy",
+
+    "Hormone Therapy"
+
+]
+
+for col in numeric:
+
+    X[col] = X[col].fillna(
+        X[col].median()
     )
 
+for col in categorical:
 
+    X[col] = X[col].fillna(
+        "Unknown"
+    )
+
+# =====================================================
+# SHAP
+# =====================================================
+
+st.subheader("Feature Importance")
+
+pipeline = model.named_steps["preprocessor"]
+
+classifier = model.named_steps["classifier"]
+
+X_processed = pipeline.transform(X)
+
+feature_names = pipeline.get_feature_names_out()
+
+explainer = shap.TreeExplainer(classifier)
+
+shap_values = explainer.shap_values(X_processed)
+
+fig, ax = plt.subplots(figsize=(10,6))
+
+if isinstance(shap_values, list):
+
+    shap.summary_plot(
+
+        shap_values[1],
+
+        X_processed,
+
+        feature_names=feature_names,
+
+        show=False
+
+    )
+
+else:
+
+    shap.summary_plot(
+
+        shap_values,
+
+        X_processed,
+
+        feature_names=feature_names,
+
+        show=False
+
+    )
+
+st.pyplot(fig)
+
+plt.close()
 
 st.divider()
 
+# =====================================================
+# Top Features
+# =====================================================
 
-# ==========================
-# Explanation
-# ==========================
+st.subheader("Top Important Features")
 
-st.subheader(
-    "🩺 Clinical Interpretation"
+importance = pd.read_csv(
+    "outputs/feature_importance.csv"
 )
 
+st.bar_chart(
+
+    importance.head(15)
+
+    .set_index("Feature")["Importance"]
+
+)
+
+st.divider()
 
 st.info(
 """
-The features with higher importance contribute more
-to the model decision.
+Interpretation
 
-These results should support clinical understanding,
-not replace medical judgement.
+• Higher SHAP values indicate a stronger influence on the prediction.
+
+• Positive SHAP values increase recurrence risk.
+
+• Negative SHAP values decrease recurrence risk.
+
+This helps clinicians understand why the AI model made a prediction.
 """
 )
 
-
 st.caption(
-"Explainable AI module - Random Forest interpretation"
+    "Breast Cancer AI • Explainable AI Dashboard"
 )

@@ -1,149 +1,282 @@
-/* ==========================
-   Global Background
-========================== */
+/* =====================================================
+   Import Font
+===================================================== */
 
-.stApp {
-    background-color: #F4F9FC;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* =====================================================
+   Global
+===================================================== */
+
+html,
+body,
+[class*="css"] {
+
+    font-family: 'Poppins', sans-serif;
+
 }
 
+.stApp {
 
-/* ==========================
-   Main Titles
-========================== */
+    background: #f4f8fb;
+
+}
+
+/* =====================================================
+   Main Container
+===================================================== */
+
+.block-container {
+
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    max-width: 1400px;
+
+}
+
+/* =====================================================
+   Titles
+===================================================== */
 
 h1 {
 
     color: #003B5C;
-
     font-weight: 700;
 
 }
 
-
-h2, h3 {
+h2 {
 
     color: #005B96;
+    font-weight: 600;
 
 }
 
+h3 {
 
+    color: #006DAB;
 
-/* ==========================
-   Metric Cards
-========================== */
+}
 
-div[data-testid="stMetric"] {
+/* =====================================================
+   Sidebar
+===================================================== */
+
+section[data-testid="stSidebar"] {
 
     background:
-
     linear-gradient(
-        135deg,
-        #ffffff,
-        #eef7fb
+        180deg,
+        #003B5C,
+        #005B96
     );
-
-
-    padding: 20px;
-
-    border-radius: 15px;
-
-    border-left: 5px solid #0077B6;
-
-    box-shadow:
-
-    0px 4px 10px rgba(0,0,0,0.08);
 
 }
 
+section[data-testid="stSidebar"] * {
 
+    color: white;
 
-/* Metric value */
+}
 
-div[data-testid="stMetricValue"] {
+/* =====================================================
+   Metric Cards
+===================================================== */
+
+div[data-testid="stMetric"]{
+
+    background:white;
+
+    border-radius:18px;
+
+    padding:20px;
+
+    border-left:6px solid #0096C7;
+
+    box-shadow:
+    0px 8px 25px rgba(0,0,0,.08);
+
+    transition:.3s;
+
+}
+
+div[data-testid="stMetric"]:hover{
+
+    transform:translateY(-5px);
+
+    box-shadow:
+    0px 15px 35px rgba(0,0,0,.15);
+
+}
+
+div[data-testid="stMetricValue"]{
 
     color:#0077B6;
 
-    font-size:32px;
+    font-size:34px;
 
     font-weight:700;
 
 }
 
+div[data-testid="stMetricLabel"]{
 
+    color:#444;
 
-/* ==========================
+    font-size:16px;
+
+}
+
+/* =====================================================
    Buttons
-========================== */
+===================================================== */
 
-.stButton button {
+.stButton>button{
 
-    background-color:#0077B6;
+    width:100%;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:
+    linear-gradient(
+        90deg,
+        #0077B6,
+        #0096C7
+    );
 
     color:white;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    height:50px;
+
+    transition:.3s;
+
+}
+
+.stButton>button:hover{
+
+    transform:scale(1.03);
+
+}
+
+/* =====================================================
+   DataFrames
+===================================================== */
+
+div[data-testid="stDataFrame"]{
+
+    border-radius:15px;
+
+    overflow:hidden;
+
+    box-shadow:
+    0px 5px 20px rgba(0,0,0,.08);
+
+}
+
+/* =====================================================
+   Success / Warning / Error
+===================================================== */
+
+.stSuccess{
+
+    border-radius:15px;
+
+}
+
+.stWarning{
+
+    border-radius:15px;
+
+}
+
+.stError{
+
+    border-radius:15px;
+
+}
+
+/* =====================================================
+   Divider
+===================================================== */
+
+hr{
+
+    border:none;
+
+    height:2px;
+
+    background:#dfe8ef;
+
+}
+
+/* =====================================================
+   Download Button
+===================================================== */
+
+.stDownloadButton>button{
+
+    width:100%;
+
+    border-radius:12px;
+
+    background:#005B96;
+
+    color:white;
+
+    height:48px;
+
+}
+
+/* =====================================================
+   Tabs
+===================================================== */
+
+button[data-baseweb="tab"]{
+
+    font-size:16px;
+
+    font-weight:600;
+
+}
+
+/* =====================================================
+   Input Boxes
+===================================================== */
+
+input{
+
+    border-radius:10px !important;
+
+}
+
+/* =====================================================
+   Select Boxes
+===================================================== */
+
+div[data-baseweb="select"]{
 
     border-radius:10px;
 
-    height:45px;
+}
 
-    font-weight:bold;
+/* =====================================================
+   Footer
+===================================================== */
+
+footer{
+
+    visibility:hidden;
 
 }
 
+header{
 
-.stButton button:hover {
-
-    background-color:#005B96;
-
-}
-
-
-
-/* ==========================
-   Data Tables
-========================== */
-
-
-div[data-testid="stDataFrame"] {
-
-    border-radius:12px;
-
-}
-
-
-
-/* ==========================
-   Sidebar
-========================== */
-
-
-section[data-testid="stSidebar"] {
-
-    background:
-
-    linear-gradient(
-        180deg,
-        #003B5C,
-        #0077B6
-    );
-
-}
-
-
-section[data-testid="stSidebar"] * {
-
-    color:white;
-
-}
-
-
-
-/* ==========================
-   Alerts
-========================== */
-
-
-.stAlert {
-
-    border-radius:12px;
+    visibility:hidden;
 
 }
