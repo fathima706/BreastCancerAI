@@ -25,16 +25,27 @@ create_database()
 # Load Machine Learning Model
 # ==========================================
 
+MODEL_PATH = "models/recurrence_model.pkl"
+PREPROCESSOR_PATH = "models/preprocessor.pkl"
+
+
 @st.cache_resource
-def load_model():
-    return joblib.load("saved_models/random_forest_pipeline.pkl")
+def load_objects():
+
+    model = joblib.load(MODEL_PATH)
+
+    preprocessor = joblib.load(PREPROCESSOR_PATH)
+
+    return model, preprocessor
+
 
 try:
-    model = load_model()
+
+    model, preprocessor = load_objects()
 
 except Exception as e:
 
-    st.error("❌ Unable to load trained model.")
+    st.error("❌ Unable to load trained model or preprocessor.")
 
     st.exception(e)
 
@@ -266,11 +277,13 @@ if predict:
 
     try:
 
-        prediction = model.predict(patient)[0]
+        # Transform patient data using the trained preprocessor
 
-        probability = (
-            model.predict_proba(patient).max() * 100
-        )
+        patient_processed = preprocessor.transform(patient)
+
+        prediction = model.predict(patient_processed)[0]
+
+        probability = model.predict_proba(patient_processed)[0][1] * 100
 
     except Exception as e:
 
@@ -319,25 +332,15 @@ if predict:
 
     st.header("🧠 AI Prediction")
 
-    prediction_text = str(prediction).lower()
-
-    if (
-        "recur" in prediction_text
-        or prediction_text == "1"
-        or prediction_text == "yes"
-    ):
+    if prediction == 1:
 
         risk = "HIGH"
-
-        color = "red"
 
         emoji = "🔴"
 
     else:
 
         risk = "LOW"
-
-        color = "green"
 
         emoji = "🟢"
 

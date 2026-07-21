@@ -1,11 +1,12 @@
 import os
+import pickle
 import joblib
 import pandas as pd
 
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.ensemble import RandomForestClassifier
 
 from sklearn.metrics import (
@@ -24,16 +25,15 @@ from src.preprocess import (
     split_data
 )
 
-# =====================================================
-# Create Required Folders
-# =====================================================
+# ======================================================
+# Create Models Folder
+# ======================================================
 
-os.makedirs("saved_models", exist_ok=True)
-os.makedirs("outputs", exist_ok=True)
+os.makedirs("models", exist_ok=True)
 
-# =====================================================
+# ======================================================
 # Load Dataset
-# =====================================================
+# ======================================================
 
 print("=" * 60)
 print("Loading Dataset...")
@@ -41,139 +41,121 @@ print("=" * 60)
 
 df = load_data()
 
+print(f"Dataset Shape : {df.shape}")
+
+# ======================================================
+# Preprocess
+# ======================================================
+
 X, y, numerical_features, categorical_features = preprocess_data(df)
+
+print(f"Features : {len(X.columns)}")
+print(f"Samples  : {len(X)}")
+
+# ======================================================
+# Train Test Split
+# ======================================================
 
 X_train, X_test, y_train, y_test = split_data(X, y)
 
-print(f"Training Samples : {len(X_train)}")
-print(f"Testing Samples  : {len(X_test)}")
+print("Training Samples :", len(X_train))
+print("Testing Samples  :", len(X_test))
 
-# =====================================================
-# Numerical Pipeline
-# =====================================================
+# ======================================================
+# Preprocessing Pipeline
+# ======================================================
 
-numeric_pipeline = Pipeline(
+numeric_transformer = Pipeline(
     steps=[
-        (
-            "imputer",
-            SimpleImputer(strategy="median")
-        ),
-        (
-            "scaler",
-            StandardScaler()
-        )
+        ("imputer", SimpleImputer(strategy="median"))
     ]
 )
 
-# =====================================================
-# Categorical Pipeline
-# =====================================================
-
-categorical_pipeline = Pipeline(
+categorical_transformer = Pipeline(
     steps=[
-        (
-            "imputer",
-            SimpleImputer(strategy="most_frequent")
-        ),
-        (
-            "encoder",
-            OneHotEncoder(handle_unknown="ignore")
-        )
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("encoder", OneHotEncoder(handle_unknown="ignore"))
     ]
 )
-
-# =====================================================
-# Combine Preprocessing
-# =====================================================
 
 preprocessor = ColumnTransformer(
     transformers=[
-        (
-            "num",
-            numeric_pipeline,
-            numerical_features
-        ),
-        (
-            "cat",
-            categorical_pipeline,
-            categorical_features
-        )
+        ("num", numeric_transformer, numerical_features),
+        ("cat", categorical_transformer, categorical_features),
     ]
 )
 
-# =====================================================
-# Random Forest Classifier
-# =====================================================
+# ======================================================
+# Transform Data
+# ======================================================
 
-classifier = RandomForestClassifier(
+X_train_processed = preprocessor.fit_transform(X_train)
+
+X_test_processed = preprocessor.transform(X_test)
+
+# ======================================================
+# Random Forest
+# ======================================================
+
+model = RandomForestClassifier(
+
     n_estimators=300,
-    max_depth=15,
+
+    max_depth=12,
+
     min_samples_split=5,
+
     min_samples_leaf=2,
+
     random_state=42,
-    n_jobs=-1
+
+    class_weight="balanced"
+
 )
-
-# =====================================================
-# Full Machine Learning Pipeline
-# =====================================================
-
-model = Pipeline(
-    steps=[
-        ("preprocessor", preprocessor),
-        ("classifier", classifier)
-    ]
-)
-
-# =====================================================
-# Train Model
-# =====================================================
 
 print("\nTraining Random Forest...\n")
 
-model.fit(X_train, y_train)
+model.fit(
 
-# =====================================================
-# Predictions
-# =====================================================
+    X_train_processed,
 
-y_pred = model.predict(X_test)
+    y_train
 
-y_prob = model.predict_proba(X_test)[:, 1]
+)
 
-# =====================================================
-# Evaluation
-# =====================================================
+print("Training Completed.")
+
+# ======================================================
+# Prediction
+# ======================================================
+
+y_pred = model.predict(X_test_processed)
+
+y_prob = model.predict_proba(X_test_processed)[:, 1]
+
+# ======================================================
+# Metrics
+# ======================================================
 
 accuracy = accuracy_score(y_test, y_pred)
 
-precision = precision_score(
+precision = precision_score(y_test, y_pred)
+
+recall = recall_score(y_test, y_pred)
+
+f1 = f1_score(y_test, y_pred)
+
+roc_auc = roc_auc_score(y_test, y_prob)
+
+cm = confusion_matrix(y_test, y_pred)
+
+report = classification_report(
     y_test,
     y_pred,
-    zero_division=0
+    output_dict=True
 )
 
-recall = recall_score(
-    y_test,
-    y_pred,
-    zero_division=0
-)
-
-f1 = f1_score(
-    y_test,
-    y_pred,
-    zero_division=0
-)
-
-roc = roc_auc_score(
-    y_test,
-    y_prob
-)
-
-# =====================================================
-# Print Results
-# =====================================================
-
+print("\n")
 print("=" * 60)
 print("MODEL PERFORMANCE")
 print("=" * 60)
@@ -182,93 +164,116 @@ print(f"Accuracy : {accuracy:.4f}")
 print(f"Precision: {precision:.4f}")
 print(f"Recall   : {recall:.4f}")
 print(f"F1 Score : {f1:.4f}")
-print(f"ROC AUC  : {roc:.4f}")
+print(f"ROC AUC  : {roc_auc:.4f}")
 
-print("\nClassification Report\n")
-print(classification_report(y_test, y_pred))
+# ======================================================
+# Save Model
+# ======================================================
 
-print("\nConfusion Matrix\n")
-print(confusion_matrix(y_test, y_pred))
+joblib.dump(
 
-# =====================================================
-# Save Metrics
-# =====================================================
+    model,
 
-metrics = pd.DataFrame({
+    "models/recurrence_model.pkl"
 
-    "Metric": [
-        "Accuracy",
-        "Precision",
-        "Recall",
-        "F1 Score",
-        "ROC AUC"
-    ],
-
-    "Value": [
-        accuracy,
-        precision,
-        recall,
-        f1,
-        roc
-    ]
-
-})
-
-metrics.to_csv(
-    "outputs/model_metrics.csv",
-    index=False
 )
 
-# =====================================================
-# Feature Importance
-# =====================================================
+joblib.dump(
 
-feature_names = model.named_steps[
-    "preprocessor"
-].get_feature_names_out()
+    preprocessor,
 
-importance = model.named_steps[
-    "classifier"
-].feature_importances_
+    "models/preprocessor.pkl"
 
-importance_df = pd.DataFrame({
+)
+
+# ======================================================
+# Save Feature Names
+# ======================================================
+
+feature_names = preprocessor.get_feature_names_out()
+
+with open(
+
+    "models/feature_names.pkl",
+
+    "wb"
+
+) as f:
+
+    pickle.dump(
+
+        feature_names,
+
+        f
+
+    )
+
+# ======================================================
+# Save Metrics
+# ======================================================
+
+metrics = {
+
+    "accuracy": accuracy,
+
+    "precision": precision,
+
+    "recall": recall,
+
+    "f1": f1,
+
+    "roc_auc": roc_auc,
+
+    "confusion_matrix": cm,
+
+    "classification_report": report
+
+}
+
+joblib.dump(
+
+    metrics,
+
+    "models/metrics.pkl"
+
+)
+
+# ======================================================
+# Save Feature Importance
+# ======================================================
+
+importance = pd.DataFrame({
 
     "Feature": feature_names,
 
-    "Importance": importance
+    "Importance": model.feature_importances_
 
 })
 
-importance_df = importance_df.sort_values(
+importance = importance.sort_values(
+
     by="Importance",
+
     ascending=False
+
 )
 
-importance_df.to_csv(
-    "outputs/feature_importance.csv",
+importance.to_csv(
+
+    "models/feature_importance.csv",
+
     index=False
+
 )
 
-print("\nTop 10 Important Features\n")
-print(importance_df.head(10))
+print("\nTop Features\n")
 
-# =====================================================
-# Save Model
-# =====================================================
+print(importance.head(15))
 
-joblib.dump(
-    model,
-    "saved_models/random_forest_pipeline.pkl"
-)
-
-print("\nPipeline Saved Successfully!")
-
-print("Model Saved Successfully!")
-
-print("Metrics Saved!")
-
-print("Feature Importance Saved!")
+print("\n")
 
 print("=" * 60)
-print("TRAINING COMPLETED SUCCESSFULLY")
+
+print("Everything Saved Successfully")
+
 print("=" * 60)

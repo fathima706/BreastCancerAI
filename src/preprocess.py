@@ -5,7 +5,10 @@ from sklearn.model_selection import train_test_split
 # Dataset Loader
 # =====================================================
 
-DATASET_PATH = "dataset/breast_cancer_data.csv"
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATASET_PATH = BASE_DIR / "dataset" / "breast_cancer_data.csv"
 
 
 def load_data():

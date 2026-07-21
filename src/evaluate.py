@@ -1,5 +1,6 @@
 import os
 import joblib
+import pandas as pd
 import matplotlib.pyplot as plt
 
 from sklearn.metrics import (
@@ -7,146 +8,255 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
     f1_score,
+    roc_auc_score,
     confusion_matrix,
+    ConfusionMatrixDisplay,
+    RocCurveDisplay,
     classification_report,
-    roc_curve,
-    auc
+    PrecisionRecallDisplay
 )
 
-from src.preprocess import load_data, preprocess_data, split_data
+from src.preprocess import (
+    load_data,
+    preprocess_data,
+    split_data
+)
 
+# ==========================================================
+# Create Outputs Folder
+# ==========================================================
 
-# Create outputs folder if missing
 os.makedirs("outputs", exist_ok=True)
 
+# ==========================================================
+# Load Dataset
+# ==========================================================
 
-# Load dataset
+print("=" * 60)
+print("Loading Dataset...")
+print("=" * 60)
+
 df = load_data()
 
-X, y = preprocess_data(df)
+X, y, numerical_features, categorical_features = preprocess_data(df)
 
 X_train, X_test, y_train, y_test = split_data(X, y)
 
+# ==========================================================
+# Load Model
+# ==========================================================
 
-# Load trained model
-model = joblib.load(
-    "saved_models/random_forest_pipeline.pkl"
-)
+print("Loading trained model...")
 
+model = joblib.load("models/recurrence_model.pkl")
 
-# Predictions
-y_pred = model.predict(X_test)
+preprocessor = joblib.load("models/preprocessor.pkl")
 
+# ==========================================================
+# Transform Data
+# ==========================================================
 
-# Probabilities for ROC curve
-y_prob = model.predict_proba(X_test)[:, 1]
+X_test_processed = preprocessor.transform(X_test)
 
+# ==========================================================
+# Prediction
+# ==========================================================
 
+y_pred = model.predict(X_test_processed)
+
+y_prob = model.predict_proba(X_test_processed)[:, 1]
+
+# ==========================================================
 # Metrics
+# ==========================================================
+
 accuracy = accuracy_score(y_test, y_pred)
-precision = precision_score(
-    y_test,
-    y_pred,
-    average="weighted"
-)
 
-recall = recall_score(
-    y_test,
-    y_pred,
-    average="weighted"
-)
+precision = precision_score(y_test, y_pred)
 
-f1 = f1_score(
-    y_test,
-    y_pred,
-    average="weighted"
-)
+recall = recall_score(y_test, y_pred)
 
+f1 = f1_score(y_test, y_pred)
 
-print("=" * 50)
-print("MODEL EVALUATION")
-print("=" * 50)
+roc_auc = roc_auc_score(y_test, y_prob)
+
+print("\n")
+print("=" * 60)
+print("MODEL PERFORMANCE")
+print("=" * 60)
 
 print(f"Accuracy : {accuracy:.4f}")
 print(f"Precision: {precision:.4f}")
 print(f"Recall   : {recall:.4f}")
 print(f"F1 Score : {f1:.4f}")
+print(f"ROC AUC  : {roc_auc:.4f}")
 
+# ==========================================================
+# Save Metrics CSV
+# ==========================================================
 
-# ==========================
+metrics_df = pd.DataFrame({
+
+    "Metric": [
+
+        "Accuracy",
+
+        "Precision",
+
+        "Recall",
+
+        "F1 Score",
+
+        "ROC AUC"
+
+    ],
+
+    "Value": [
+
+        accuracy,
+
+        precision,
+
+        recall,
+
+        f1,
+
+        roc_auc
+
+    ]
+
+})
+
+metrics_df.to_csv(
+
+    "outputs/model_metrics.csv",
+
+    index=False
+
+)
+
+# ==========================================================
 # Confusion Matrix
-# ==========================
+# ==========================================================
 
-cm = confusion_matrix(
+fig, ax = plt.subplots(figsize=(6, 5))
+
+ConfusionMatrixDisplay.from_predictions(
+
     y_test,
-    y_pred
+
+    y_pred,
+
+    cmap="Blues",
+
+    ax=ax
+
 )
 
-print("\nConfusion Matrix")
-print(cm)
+plt.title("Confusion Matrix")
 
-
-# ==========================
-# Classification Report
-# ==========================
-
-print("\nClassification Report")
-print(
-    classification_report(
-        y_test,
-        y_pred
-    )
-)
-
-
-# ==========================
-# ROC Curve
-# ==========================
-
-fpr, tpr, thresholds = roc_curve(
-    y_test,
-    y_prob,
-    pos_label="1:Recurred"
-)
-
-roc_auc = auc(
-    fpr,
-    tpr
-)
-
-
-plt.figure(figsize=(7,5))
-
-plt.plot(
-    fpr,
-    tpr,
-    label=f"AUC = {roc_auc:.2f}",
-    color="blue"
-)
-
-plt.plot(
-    [0,1],
-    [0,1],
-    linestyle="--",
-    color="gray"
-)
-
-plt.xlabel("False Positive Rate")
-plt.ylabel("True Positive Rate")
-
-plt.title(
-    "ROC Curve - Random Forest"
-)
-
-plt.legend()
+plt.tight_layout()
 
 plt.savefig(
-    "outputs/roc_curve.png",
-    dpi=300,
-    bbox_inches="tight"
+
+    "outputs/confusion_matrix.png",
+
+    dpi=300
+
 )
 
 plt.close()
 
+# ==========================================================
+# ROC Curve
+# ==========================================================
 
-print("\nROC curve saved successfully!")
+fig, ax = plt.subplots(figsize=(6, 5))
+
+RocCurveDisplay.from_predictions(
+
+    y_test,
+
+    y_prob,
+
+    ax=ax
+
+)
+
+plt.title("ROC Curve")
+
+plt.tight_layout()
+
+plt.savefig(
+
+    "outputs/roc_curve.png",
+
+    dpi=300
+
+)
+
+plt.close()
+
+# ==========================================================
+# Precision Recall Curve
+# ==========================================================
+
+fig, ax = plt.subplots(figsize=(6,5))
+
+PrecisionRecallDisplay.from_predictions(
+
+    y_test,
+
+    y_prob,
+
+    ax=ax
+
+)
+
+plt.title("Precision Recall Curve")
+
+plt.tight_layout()
+
+plt.savefig(
+
+    "outputs/precision_recall_curve.png",
+
+    dpi=300
+
+)
+
+plt.close()
+
+# ==========================================================
+# Classification Report
+# ==========================================================
+
+report = classification_report(
+
+    y_test,
+
+    y_pred,
+
+    output_dict=True
+
+)
+
+report_df = pd.DataFrame(report).transpose()
+
+report_df.to_csv(
+
+    "outputs/classification_report.csv"
+
+)
+
+print("\nClassification Report")
+
+print(report_df)
+
+print("\n")
+
+print("=" * 60)
+
+print("Evaluation Complete")
+
+print("=" * 60)
